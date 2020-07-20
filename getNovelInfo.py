@@ -13,7 +13,7 @@ sys.path.append(os.path.abspath(os.path.join(os.getcwd(), ".\\lib\\site-packages
 from selenium import webdriver
 import time
 
-#添加日志
+# 添加日志
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -46,17 +46,17 @@ class getNovelInfo():
     def __init__(self,
                  toMail,
                  url,
+                 getUrl,
                  record=0,
                  timeout=10,
                  file_path='./count.pag',
-                 mode='a',
                  file_encode='utf-8'):
         self.toMail = toMail
         self.url = url
         self.record = record
         self.timeout = timeout
         self.filePath = file_path
-        self.mode = mode
+        self.getUrl = getUrl
         self.fileEncode = file_encode
         self.li_dataInfo = []
         self.db = dbm.open(file_path, 'c')
@@ -131,8 +131,10 @@ class getNovelInfo():
 
         # 记录过大
         elif paper_num < old_num:
-            s = "您的记录章节数：%s 大于最新章节数： %s! 特此通知！\n\n系统自动从最新章节：%s开始为您推送。" % (
-                old_num, paper_num, paper_num)
+
+            # 拼接上小说
+            s = "您的记录章节数：%s 大于最新章节数： %s! 特此通知！\n\n系统自动从最新章节：%s开始为您推送。\n" % (
+                old_num, paper_num, paper_num) + self.getNovel()
 
             # 发送邮件
             sender.send_mail(self.toMail, self.li_dataInfo[3], s)
@@ -144,14 +146,32 @@ class getNovelInfo():
         # 小说更新
         elif paper_num > old_num:
             total = paper_num - old_num
-            s = "更新到: %s 章\n%s\n\n最新更新时间: %s\n\n您共有%s章未读" % (
-                self.li_dataInfo[0], self.li_dataInfo[1], self.li_dataInfo[2], total)
+
+            # 拼接上小说
+            s = "更新到: %s 章\n%s\n\n最新更新时间: %s\n\n您共有%s章未读\n" % (
+                self.li_dataInfo[0], self.li_dataInfo[1], self.li_dataInfo[2], total) + self.getNovel()
 
             # 发送邮件
             sender.send_mail(self.toMail, self.li_dataInfo[3], s)
 
             # 刷新库
             self.db[self.li_dataInfo[3]] = str(paper_num)
+
+    # 获取笔趣阁的小说
+    def getNovel(self):
+        timeout = 10
+        kv = {'user-agent': 'Mozilla/5.0'}
+        # 创建请求
+        r = requests.get(self.getUrl, headers=kv, timeout=timeout)
+        r.encoding = r.apparent_encoding
+        t = requests.get(self.getUrl + BeautifulSoup(r.text, "html.parser")
+                         .find('div', attrs={'id': 'info'})
+                         .find_all('a').pop(0).get('href'),
+                         headers=kv,
+                         timeout=timeout)
+        t.encoding = r.apparent_encoding
+        return BeautifulSoup(t.text, 'html.parser') \
+            .find(id='content').text.replace('\xa0' * 8, '\n')
 
 
 if __name__ == "__main__":
@@ -160,9 +180,9 @@ if __name__ == "__main__":
     importlib.reload(sys)
 
     # sys.argv[0]是脚本名称
-    if len(sys.argv) - 1 != 2:
+    if len(sys.argv) - 1 != 3:
         logger.error(
-            'Two parameters are required: toMail URL, but ' + str(len(sys.argv) - 1) + ' parameters are detected')
+            'Three parameters are required: toMail URL, but ' + str(len(sys.argv) - 1) + ' parameters are detected')
         sys.exit(1)
 
     """
@@ -171,6 +191,7 @@ if __name__ == "__main__":
     """
     toMail = sys.argv[1].encode(sys.getdefaultencoding()).decode('UTF-8', 'strict')
     url = sys.argv[2].encode(sys.getdefaultencoding()).decode('UTF-8', 'strict')
+    getUrl = sys.argv[3].encode(sys.getdefaultencoding()).decode('UTF-8', 'strict')
 
     # 检查邮箱格式
     if not re.match(r'^[0-9a-zA-Z_]{0,19}@[0-9a-zA-Z]{1,13}\.[com,cn,net]{1,3}$', toMail):
@@ -182,8 +203,13 @@ if __name__ == "__main__":
         logger.error('Url: ' + url + ' is look valid')
         sys.exit(1)
 
+    # 检查getUrl格式
+    if not re.match(r'^https?:/{2}\w.+$', getUrl):
+        logger.error('GetUrl: ' + getUrl + ' is look valid')
+        sys.exit(1)
+
     # 实例初始化
-    yuanZun = getNovelInfo(toMail, url)
+    yuanZun = getNovelInfo(toMail, url, getUrl)
 
     # 业务流程
     yuanZun.parseYuanZun()

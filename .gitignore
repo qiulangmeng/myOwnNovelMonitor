@@ -7,8 +7,9 @@
 *.iml
 out
 gen
-.ini
+config.ini
 ghostdriver.log
 *.pag.*
 test.*
 log/*
+/getNovelInfo.bat
