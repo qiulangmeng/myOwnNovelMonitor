@@ -17,7 +17,7 @@ import time
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
-handler = TimedRotatingFileHandler("log/log.txt", when='D', encoding="utf-8")
+handler = TimedRotatingFileHandler("log/log.txt", when='MIDNIGHT', encoding="utf-8")
 handler.setLevel(logging.DEBUG)
 handler.setFormatter(formatter)
 console = logging.StreamHandler()
