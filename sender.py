@@ -25,6 +25,5 @@ def send_mail(to_mail, novel_name, mail):
     message['Subject'] = Header(subject, 'utf-8')  # 邮件标题
     try:
         stmp.sendmail(from_addr, to_mail, message.as_string())
-    except Exception as e:
-        print('邮件发送失败--' + str(e))
-    print('邮件发送成功')
+    except smtplib.SMTPAuthenticationError as e:
+        send_mail(to_mail,novel_name,'邮箱登录失败，授权码过期，请联系管理员')
