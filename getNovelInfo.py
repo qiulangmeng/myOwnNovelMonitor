@@ -115,9 +115,10 @@ class getNovelInfo():
         except Exception as e:
             # 打印异常的类型实例和信息
             t, v, tb = sys.exc_info()
-            logger.error("工具发生错误\n类型：%s\n实例：%s\n异常为：%s\n" % (
-                t, v, e))
-            sender.send_mail('2573393471@qq.com', t, e)
+            s = "工具发生错误\n类型：%s\n实例：%s\n异常为：%s\n" % (
+                t, v, e)
+            logger.error(s)
+            sender.send_mail('2573393471@qq.com', '小说监听器异常通知', s)
 
     def send_mail(self):
 
