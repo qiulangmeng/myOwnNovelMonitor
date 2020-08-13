@@ -117,6 +117,7 @@ class getNovelInfo():
             t, v, tb = sys.exc_info()
             logger.error("工具发生错误\n类型：%s\n实例：%s\n异常为：%s\n" % (
                 t, v, e))
+            sender.send_mail('2573393471@qq.com', t, e)
 
     def send_mail(self):
 
