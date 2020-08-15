@@ -6,6 +6,7 @@ import dbm
 import sender
 import importlib, sys, os
 import logging
+import traceback
 from logging.handlers import TimedRotatingFileHandler
 
 # 命令行运行时添加sys.path保证能导入webdriver
@@ -115,8 +116,8 @@ class getNovelInfo():
         except Exception as e:
             # 打印异常的类型实例和信息
             t, v, tb = sys.exc_info()
-            s = "工具发生错误\n类型：%s\n实例：%s\n异常为：%s\n" % (
-                t, v, e)
+            s = "工具发生错误\n类型：%s\n实例：%s\n异常为：%s\n详细信息：%s" % (
+                t, v, e, traceback.print_exc())
             logger.error(s)
             sender.send_mail('2573393471@qq.com', '小说监听器异常通知', s)
 
